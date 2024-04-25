@@ -69,6 +69,7 @@ system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
     multithread = linux
 ))
 
+
 # windows can't support multi-thread
 # this takes approx 3 minutes
 # errors -----------------------------------------------------------------------
@@ -122,6 +123,7 @@ dim(seqtab.nochim)
 table(nchar(getSequences(seqtab.nochim)))
 # track reads ------------------------------------------------------------------
 getN <- function(x) sum(getUniques(x))
+
 track <- cbind(
     out, sapply(dadaFs, getN), sapply(dadaRs, getN),
     sapply(mergers, getN), rowSums(seqtab.nochim)
@@ -144,7 +146,7 @@ track %>%
 # taxa assign ------------------------------------------------------------------
 system.time(mytaxa <- assignTaxonomy(
     seqtab.nochim,
-    "./refdb/reference_16S_taxa.fa"
+    "./data/12S_refdb_curated.fasta"
 ))
 dim(mytaxa)
 
@@ -172,7 +174,7 @@ asvcounts <- left_join(mytaxa.df, seqtab.nochim.df) %>%
 # column name meta data --------------------------------------------------------
 
 meta <- data.frame(s = colnames(asvcounts)) %>%
-    filter(grepl("C1", s) | grepl("C2", s)) %>%
+    filter(grepl("Site", s)) %>%
     mutate(
         building = substr(s, 1, 2),
         session = substr(s, 3, 3),

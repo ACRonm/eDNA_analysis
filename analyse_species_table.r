@@ -48,8 +48,11 @@ ordihull(mds, groups = samples$building, draw = "polygon", col = 2:3)
 ano <- anosim(species, samples$building, distance = "bray")
 ano
 
-
-out <- c("Salmo salar", "Sus scrofa", "Bos taurus", "Vulpes vulpes", "Canis lupus", "Ovis aries", "Gallus gallus", "Homo sapiens", "unknown", "Macropus giganteus")
+out <- c(
+    "Salmo salar", "Sus scrofa", "Bos taurus", "Vulpes vulpes",
+    "Canis lupus", "Ovis aries", "Gallus gallus", "Homo sapiens",
+    "unknown", "Macropus giganteus"
+)
 sp3 <- species[, !colnames(species) %in% out]
 
 index <- -which(rowSums(sp3) == 0)
@@ -61,7 +64,6 @@ s2$shannon <- diversity(sp4, index = "shannon")
 boxplot(sr ~ building, data = s2)
 boxplot(shannon ~ building, data = s2)
 t.test(shannon ~ building, data = s2)
-
 
 mds <- metaMDS((sp4 > 0), distance = "bray")
 plot(mds, type = "text", display = "sites")
