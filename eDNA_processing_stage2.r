@@ -250,7 +250,7 @@ set.seed(1)
 tree <- heat_tree(obj,
     node_label = taxon_names,
     node_size = n_obs,
-    node_color = "green",
+    node_color = Si,
     node_size_axis_label = "asv count",
     node_color_axis_label = "Samples with reads",
     layout = "davidson-harel", # The primary layout algorithm
@@ -263,14 +263,19 @@ ggsave("./data/heat_tree.png", tree,
     units = "cm", width = 21, height = 15, dpi = 600
 )
 
+print(colnames(asvcounts))
 
-# species table ----------------------------------------------------------------
+
+
 speciesTbl <- asvcounts %>%
-    select(Species:Site_22) %>%
-    mutate(Species = ifelse(is.na(Species), "unknown", Species)) %>%
-    group_by(Species) %>%
+    select(Genus, Species, everything()) %>%
+    mutate(
+        Taxon = paste(Genus, Species, sep = " "),
+        Species = ifelse(is.na(Species), "unknown", Species)
+    ) %>%
+    group_by(Taxon) %>%
     summarise_if(is.numeric, sum) %>%
-    column_to_rownames(var = "Species") %>%
+    column_to_rownames(var = "Taxon") %>%
     as.matrix()
 
 speciesTbl2 <- speciesTbl[rowSums(speciesTbl) != 0, ]
