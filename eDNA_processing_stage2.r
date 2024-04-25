@@ -58,16 +58,16 @@ ggsave("./data/quality_profile_reverse.png", plotQualityProfile(fnRs[1:2]),
 )
 
 # # filter and trim --------------------------------------------------------------
-# system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
-#     truncLen = c(140, 140),
-#     trimLeft = c(18, 18), # based on V3V4 primers
-#     maxN = 0, # max Ns
-#     maxEE = c(3, 4), # expected errors
-#     truncQ = 2, #
-#     rm.phix = TRUE,
-#     compress = TRUE,
-#     multithread = linux
-# ))
+system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
+    # truncLen = c(140, 140),
+    # trimLeft = c(18, 18), # based on V3V4 primers
+    maxN = 0, # max Ns
+    maxEE = c(3, 4), # expected errors
+    truncQ = 2, #
+    rm.phix = TRUE,
+    compress = TRUE,
+    multithread = linux
+))
 
 # windows can't support multi-thread
 # this takes approx 3 minutes
@@ -248,7 +248,7 @@ set.seed(1)
 tree <- heat_tree(obj,
     node_label = taxon_names,
     node_size = n_obs,
-    node_color = "#green"
+    node_color = "green",
     node_size_axis_label = "asv count",
     node_color_axis_label = "Samples with reads",
     layout = "davidson-harel", # The primary layout algorithm
