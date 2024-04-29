@@ -41,8 +41,6 @@ filtRs <- file.path(
     paste0(sample.names, "_R_filtered.fastq.gz")
 )
 
-# plot quality -----------------------------------------------------------------
-
 # first two fasta files
 plotQualityProfile(fnFs[1:2]) # forward
 
@@ -57,10 +55,10 @@ ggsave("./data/quality_profile_reverse.png", plotQualityProfile(fnRs[1:2]),
     units = "cm", width = 21, height = 15, dpi = 600
 )
 
-# # filter and trim --------------------------------------------------------------
+# filter and trim --------------------------------------------------------------
 system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
-    # truncLen = c(140, 140),
-    # trimLeft = c(18, 18), # based on V3V4 primers
+    truncLen = 240, # truncate to 240 bp
+    trimLeft = c(20, 21), # based on V3V4 primers
     maxN = 0, # max Ns
     maxEE = c(3, 4), # expected errors
     truncQ = 2, #
@@ -70,11 +68,13 @@ system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
 ))
 
 
+
 # windows can't support multi-thread
 # this takes approx 3 minutes
 # errors -----------------------------------------------------------------------
 errF <- learnErrors(filtFs, multithread = linux)
 errR <- learnErrors(filtRs, multithread = linux)
+
 
 # plot errors ------------------------------------------------------------------
 plotErrors(errF, nominalQ = TRUE)
@@ -111,6 +111,7 @@ mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose = TRUE)
 seqtab <- makeSequenceTable(mergers)
 
 dim(seqtab)
+
 table(nchar(getSequences(seqtab)))
 
 
@@ -121,6 +122,7 @@ seqtab.nochim <- removeBimeraDenovo(seqtab,
 )
 dim(seqtab.nochim)
 table(nchar(getSequences(seqtab.nochim)))
+
 # track reads ------------------------------------------------------------------
 getN <- function(x) sum(getUniques(x))
 
@@ -246,7 +248,22 @@ obj$data$tax_occ <- calc_n_samples(obj, "tax_abund",
 
 # plot metacoder ---------------------------------------------------------------
 
+print(obj$data$class_data)
+
+
 set.seed(1)
+
+
+# print the class data tibble in the obj
+print(obj$data$class_data)
+
+print(obj)
+
+# Remove all rows where tax_name is NA
+obj$data$class_data <- obj$data$class_data %>% filter(!is.na(tax_name))
+
+print(obj$data$class_data)
+
 tree <- heat_tree(obj,
     node_label = taxon_names,
     node_size = n_obs,
@@ -256,14 +273,14 @@ tree <- heat_tree(obj,
     layout = "davidson-harel", # The primary layout algorithm
     initial_layout = "reingold-tilford"
 ) # The layout algorithm that initializes node locations
-tree
+print(tree)
+
 
 # save as png
-ggsave("./data/heat_tree.png", tree,
+ggsave("./data/heat_tree2.png", tree,
     units = "cm", width = 21, height = 15, dpi = 600
 )
 
-print(colnames(asvcounts))
 
 
 
@@ -273,10 +290,15 @@ speciesTbl <- asvcounts %>%
         Taxon = paste(Genus, Species, sep = " "),
         Species = ifelse(is.na(Species), "unknown", Species)
     ) %>%
+    filter(Species != "unknown") %>%
     group_by(Taxon) %>%
     summarise_if(is.numeric, sum) %>%
     column_to_rownames(var = "Taxon") %>%
     as.matrix()
+
+# Replace "_F_filtered.fastq.gz" with "" in the column names
+colnames(speciesTbl) <- gsub("_F_filtered.fastq.gz", "", colnames(speciesTbl))
+
 
 speciesTbl2 <- speciesTbl[rowSums(speciesTbl) != 0, ]
 rowSums(speciesTbl2)
@@ -284,3 +306,12 @@ t(speciesTbl)
 
 write.csv(speciesTbl2, "./data/species_matrix.csv")
 write.csv(meta, "./data/sample_meta.csv", row.names = FALSE)
+
+# get species table from ./data/species_matrix.csv
+speciesTbl <- read.csv("./data/species_matrix.csv", row.names = 1)
+
+# flip the rows and columns
+speciesTbl <- t(speciesTbl)
+
+# save
+write.csv(speciesTbl, "./data/species_matrix_transposed.csv")

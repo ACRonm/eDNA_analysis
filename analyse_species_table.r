@@ -15,11 +15,19 @@ samples <- read.csv("data/sample_meta.csv", stringsAsFactors = TRUE)
 samples$sr <- specnumber(species)
 samples$shannon <- diversity(species, index = "shannon")
 
+print(samples)
+
 
 # check some relationships
+ggsave("plots/species/boxplot_sr.png", plot = last_plot(), width = 15, height = 10, dpi = 300)
 
-boxplot(sr ~ building, data = samples)
-boxplot(shannon ~ building, data = samples)
+boxplot(shannon ~ sample_id, data = samples)
+# set y to "Species richness"
+ylab("Species richness")
+
+# save the plot
+ggsave("plots/species/boxplot_sr.png", plot = last_plot(), width = 15, height = 10, dpi = 300)
+
 
 sp <- data.frame(species)
 sp$samp <- rownames(sp)
