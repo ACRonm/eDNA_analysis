@@ -59,24 +59,27 @@ def plot_reads_per_sample():
 
     # Set the first column as the index
     df = pd.read_csv(filename, index_col=0)
+    df.index = ['ETT.' + str(i).zfill(2) for i in range(1, len(df.index) + 1)]
 
-    # change "Site_04" to ETT.04
-
-    df = df.rename(columns=lambda x: re.sub(r'Site_0(\d)', r'ETT.\1', x))
+    print(df)
 
     # Remove any rows that have all zeros
     df = df.loc[(df != 0).any(axis=1)]
 
     print(df)
 
-    ax = df.plot(kind='bar', stacked=True, figsize=(10, 5))
+    print(len(df.columns))
 
-    plt.yscale('log')
+    ax = df.plot(kind='bar', stacked=True, figsize=(10, 5),
+                 color=plt.cm.viridis(np.arange(len(df.columns))), edgecolor='black')
+
+    plt.yscale('linear')
     plt.xlabel('Sampling Site')
     plt.ylabel('Number of Reads per Sample (log)')
 
     # rotate xticks parallel to the axis
-    plt.xticks(rotation=0, ha='center')
+    # Adjust the rotation and alignment of xticks
+    plt.xticks(rotation=45, ha='right')
 
     # move the legend outside the chart
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -93,25 +96,25 @@ if __name__ == '__main__':
     plot_reads_per_sample()
     directory = './data/ETT_Filtered_sequences/'
 
-    total_qualities = []
+    # total_qualities = []
 
-    if not os.path.exists('./plots'):
-        os.makedirs('./plots')
+    # if not os.path.exists('./plots'):
+    #     os.makedirs('./plots')
 
-    for filename in os.listdir(directory):
-        print(filename)
-        if filename.endswith('.fastq.gz'):
-            filename = os.path.join(directory, filename)
-            mean = plot_fastq_qualities(filename)
+    # for filename in os.listdir(directory):
+    #     print(filename)
+    #     if filename.endswith('.fastq.gz'):
+    #         filename = os.path.join(directory, filename)
+    #         mean = plot_fastq_qualities(filename)
 
-            # save the plot
-            plt.savefig(
-                './plots/' + os.path.basename(filename).replace('.fastq.gz', '_quality.png'))
+    #         # save the plot
+    #         plt.savefig(
+    #             './plots/' + os.path.basename(filename).replace('.fastq.gz', '_quality.png'))
 
-            plt.close()
+    #         plt.close()
 
-            # add mean to list
-            total_qualities.append(mean)
+    #         # add mean to list
+    #         total_qualities.append(mean)
 
-    mean_quality = np.mean(total_qualities)
-    print('Mean quality: ', mean_quality)
+    # mean_quality = np.mean(total_qualities)
+    # print('Mean quality: ', mean_quality)

@@ -57,7 +57,7 @@ ggsave("./data/quality_profile_reverse.png", plotQualityProfile(fnRs[1:2]),
 
 # filter and trim --------------------------------------------------------------
 system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
-    truncLen = 240, # truncate to 240 bp
+    truncLen = 200, # truncate to 240 bp
     trimLeft = c(20, 21), # based on V3V4 primers
     maxN = 0, # max Ns
     maxEE = c(3, 4), # expected errors
@@ -259,6 +259,7 @@ print(obj$data$class_data)
 
 print(obj)
 
+
 # Remove all rows where tax_name is NA
 obj$data$class_data <- obj$data$class_data %>% filter(!is.na(tax_name))
 
@@ -271,8 +272,8 @@ tree <- heat_tree(obj,
     node_size_axis_label = "asv count",
     node_color_axis_label = "Samples with reads",
     layout = "davidson-harel", # The primary layout algorithm
-    initial_layout = "reingold-tilford"
-) # The layout algorithm that initializes node locations
+    initial_layout = "reingold-tilford",
+    ) # The layout algorithm that initializes node locations
 print(tree)
 
 
