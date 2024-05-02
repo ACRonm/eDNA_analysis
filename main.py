@@ -1,6 +1,6 @@
-from Nutrients_analysis.nutrients import nutrients
-from Heavy_metals_analysis.heavy_metals import heavy_metals
-from eDNA_analysis.edna import edna
+from nutrients import nutrients
+from heavy_metals import heavy_metals
+from edna import edna
 import pandas as pd
 
 
@@ -15,15 +15,20 @@ def main():
     data = pd.read_csv('data/raw_data.csv', encoding='ISO-8859-1')
 
     while True:
-        choice = menu()
-        if choice == 1:
-            nutrients(data)
-        elif choice == 2:
-            heavy_metals(data)
-        elif choice == 3:
-            edna(data)
-        else:
-            print("Invalid choice")
+        try:
+            choice = menu()
+            if choice == 1:
+                nutrients(data)
+            elif choice == 2:
+                heavy_metals(data)
+            elif choice == 3:
+                edna(data=None)
+            else:
+                print("Invalid choice. Please try again.")
+                continue
+        except Exception as e:
+            print("Invalid choice. Please try again.")
+            continue
 
 
 if __name__ == "__main__":
