@@ -22,7 +22,7 @@ sapply(c("dada2", "phyloseq", "tidyverse", "microbiome", "msa", "DECIPHER", "pha
 
 
 ### load and examine single fasta sequences###
-sequencefile <- "data/12S_refdb_curated.fasta"
+sequencefile <- "../data/12S_refdb_curated.fasta"
 mySequences <- readAAStringSet(sequencefile)
 mySequences
 
