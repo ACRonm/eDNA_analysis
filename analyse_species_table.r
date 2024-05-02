@@ -4,29 +4,63 @@ library(tidyverse)
 
 
 # load the species tables from a full run
-species <- read.csv("data/species_matrix.csv", row.names = 1)
+species <- read.csv("data/species_matrix_transposed.csv", row.names = 1)
 
 # we want to have samples in the rows and species in the columns
-species <- t(species)
+# species <- t(species)  # Comment out this line
 
 samples <- read.csv("data/sample_meta.csv", stringsAsFactors = TRUE)
 
+print(samples)
+
+samples$site <- samples$sample_id
+
+print(species)
 
 samples$sr <- specnumber(species)
-samples$shannon <- diversity(species, index = "shannon")
 
-print(samples)
+# save sr to csv
+write.csv(samples, "data/species_richness.csv", row.names = FALSE)
+
+samples$shannon <- diversity(species, index = "shannon")
+# save shannon to csv
+write.csv(samples, "data/genetic_diversity.csv", row.names = FALSE)
+
+# Rest of your code...
 
 
 # check some relationships
-ggsave("plots/species/boxplot_sr.png", plot = last_plot(), width = 15, height = 10, dpi = 300)
 
-boxplot(shannon ~ sample_id, data = samples)
-# set y to "Species richness"
-ylab("Species richness")
+boxplot(sr ~ site, data = samples)
+
+boxplot(shannon ~ site, data = samples)
+
+# change x tick angle
+ggplot(samples, aes(x = site, y = sr)) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme(axis.text.x = element_blank()) +
+    xlab("Molonglo River")
 
 # save the plot
-ggsave("plots/species/boxplot_sr.png", plot = last_plot(), width = 15, height = 10, dpi = 300)
+
+ggsave("data/sr_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
+# change x tick angle
+
+ggplot(samples, aes(x = site, y = shannon)) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text()) +
+    xlab("Molonglo River site proximity") +
+    ylab("Genetic Diversity (shannon index)") +
+    theme(axis.title = element_text(size = 14)) +
+    theme(axis.text = element_text(size = 12)) +
+    theme(axis.ticks = element_line(size = 1)) +
+    theme(panel.grid.major = element_blank()) +
+    theme(panel.grid.minor = element_blank())
+
+# save the plot
+
+ggsave("data/shannon_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 
 
 sp <- data.frame(species)
@@ -34,26 +68,44 @@ sp$samp <- rownames(sp)
 
 library(reshape)
 
+# Melt the species dataframe
 dat <- melt(species)
 
-ggplot(dat, aes(x = X1, y = value)) +
-    geom_bar(stat = "identity", aes(fill = X2))
+# Create the bar plot
+ggplot(dat, aes(x = variable, y = value)) +
+    geom_bar(stat = "identity", aes(fill = value))
 
 sp2 <- data.frame(x = colnames(species), y = colSums(species))
 ggplot(sp2, aes(x = factor(x), y = log(y), fill = x)) +
-    geom_bar(stat = "identity")
+    geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Species") +
+    ylab("Total Abundance (log(y))")
+
+# save the plot
+ggsave("data/total_abundance.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 
 
+# close plot
+dev.off()
 ###
 
 
 mds <- metaMDS(species, distance = "bray")
-plot(mds, type = "text", display = "sites")
-plot(mds)
-ordihull(mds, groups = samples$building, draw = "polygon", col = 2:3)
+
+mds_plot <- plot(mds, type = "text", display = "sites")
+
+mds_plot <- ordihull(mds, type = "text", groups = samples$site, draw = "polygon", col = 2:3)
 
 
-ano <- anosim(species, samples$building, distance = "bray")
+# save the plot
+ggsave("data/mds_plot.png", plot = mds_plot, width = 10, height = 10, dpi = 300)
+
+print(species, samples$site)
+
+print(unique(samples$site))
+
+ano <- anosim(species, samples$site, distance = "bray")
 ano
 
 out <- c(

@@ -71,7 +71,7 @@ def plot_reads_per_sample():
     print(len(df.columns))
 
     ax = df.plot(kind='bar', stacked=True, figsize=(10, 5),
-                 color=plt.cm.viridis(np.arange(len(df.columns))), edgecolor='black')
+                 color=plt.cm.tab20b(np.arange(len(df.columns))), edgecolor='black')
 
     plt.yscale('linear')
     plt.xlabel('Sampling Site')
@@ -88,15 +88,74 @@ def plot_reads_per_sample():
     plt.savefig('./plots/taxonomic_abundance.png', bbox_inches='tight')
     plt.close()
 
+    # plot a pie chart for all the samples
+    ax = df.sum().plot(kind='pie', figsize=(10, 10), autopct='%1.1f%%',
+                       colors=plt.cm.tab20b(np.arange(len(df.columns))), startangle=90, wedgeprops=dict(width=0.5), textprops=dict(color='black', fontsize=10))
+    ax.set_title('Taxonomic Abundance')
+    plt.tight_layout()
+
+    # Adjust the position of the labels
+    ax.legend(bbox_to_anchor=(1, 0.5), loc='center left')
+
+    # Offset the percentages to avoid overlap
+    plt.subplots_adjust(left=0.1, right=0.7)
+
+    plt.savefig('./plots/taxonomic_abundance_pie.png', bbox_inches='tight')
+
     # calculate the mean Alpha diversity using the Shannon index
+
+
+def plot_abundance_per_species():
+    file_name = './data/species_matrix_transposed.csv'
+    df = pd.read_csv(file_name, index_col=0)
+    df.index = ['ETT.' + str(i).zfill(2) for i in range(1, len(df.index) + 1)]
+
+    # Remove any rows that have all zeros
+    df = df.loc[(df != 0).any(axis=1)]
+
+    # Calculate the total number of reads per sample
+    total_reads = df.sum(axis=1)
+
+    # Calculate the relative abundance of each species
+    relative_abundance = df.div(total_reads, axis=0)
+
+    # Calculate the mean relative abundance of each species
+    mean_relative_abundance = relative_abundance.mean()
+
+    # Sort the mean relative abundance in descending order
+    mean_relative_abundance = mean_relative_abundance.sort_values(
+        ascending=False)
+
+    # Plot the mean relative abundance of each species
+    ax = mean_relative_abundance.plot(kind='bar', figsize=(
+        10, 5), color='skyblue', edgecolor='black')
+
+    plt.xlabel('Species')
+    plt.ylabel('Mean Relative Abundance')
+    plt.title('Mean Relative Abundance of Each Species')
+
+    plt.xticks(rotation=45, ha='right')
+
+    # Add data labels to the bars
+    for i, v in enumerate(mean_relative_abundance):
+        ax.text(i, v, str(round(v, 2)), ha='center', va='bottom')
+
+    plt.savefig('./plots/mean_relative_abundance.png', bbox_inches='tight')
+    plt.close()
+
+
+def plot_alpha_diversity():
+    return
 
 
 if __name__ == '__main__':
 
-    plot_reads_per_sample()
-    directory = './data/ETT_Filtered_sequences/'
+    # plot_reads_per_sample()
+    # plot_alpha_diversity()
+    plot_abundance_per_species()
+    directory = './data/ETT_filtered_sequences/'
 
-    # total_qualities = []
+    total_qualities = []
 
     # if not os.path.exists('./plots'):
     #     os.makedirs('./plots')
@@ -116,5 +175,5 @@ if __name__ == '__main__':
     #         # add mean to list
     #         total_qualities.append(mean)
 
-    # mean_quality = np.mean(total_qualities)
-    # print('Mean quality: ', mean_quality)
+    mean_quality = np.mean(total_qualities)
+    print('Mean quality: ', mean_quality)

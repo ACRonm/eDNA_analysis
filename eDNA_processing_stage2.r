@@ -75,7 +75,6 @@ system.time(out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
 errF <- learnErrors(filtFs, multithread = linux)
 errR <- learnErrors(filtRs, multithread = linux)
 
-
 # plot errors ------------------------------------------------------------------
 plotErrors(errF, nominalQ = TRUE)
 ggsave("./data/errF.png", plotErrors(errF, nominalQ = TRUE),
@@ -141,8 +140,8 @@ track
 track %>%
     as.data.frame() %>%
     rownames_to_column("sample_id") %>%
-    mutate(building = substr(sample_id, 1, 2)) %>%
-    group_by(building) %>%
+    mutate(site = substr(sample_id, 5, 11)) %>%
+    group_by(site) %>%
     summarise_if(is.numeric, sum)
 
 # taxa assign ------------------------------------------------------------------
@@ -178,9 +177,7 @@ asvcounts <- left_join(mytaxa.df, seqtab.nochim.df) %>%
 meta <- data.frame(s = colnames(asvcounts)) %>%
     filter(grepl("Site", s)) %>%
     mutate(
-        building = substr(s, 1, 2),
-        session = substr(s, 3, 3),
-        sample = substr(s, 4, 4)
+        site = substr(s, 1, 11),
     ) %>%
     dplyr::rename(sample_id = s) %>%
     as_tibble()
@@ -273,7 +270,7 @@ tree <- heat_tree(obj,
     node_color_axis_label = "Samples with reads",
     layout = "davidson-harel", # The primary layout algorithm
     initial_layout = "reingold-tilford",
-    ) # The layout algorithm that initializes node locations
+) # The layout algorithm that initializes node locations
 print(tree)
 
 
