@@ -4,12 +4,12 @@ library(tidyverse)
 
 
 # load the species tables from a full run
-species <- read.csv("data/species_matrix_transposed.csv", row.names = 1)
+species <- read.csv("../data/species_matrix_transposed.csv", row.names = 1)
 
 # we want to have samples in the rows and species in the columns
 # species <- t(species)  # Comment out this line
 
-samples <- read.csv("data/sample_meta.csv", stringsAsFactors = TRUE)
+samples <- read.csv("../data/sample_meta.csv", stringsAsFactors = TRUE)
 
 print(samples)
 
@@ -20,11 +20,11 @@ print(species)
 samples$sr <- specnumber(species)
 
 # save sr to csv
-write.csv(samples, "data/species_richness.csv", row.names = FALSE)
+write.csv(samples, "../data/species_richness.csv", row.names = FALSE)
 
 samples$shannon <- diversity(species, index = "shannon")
 # save shannon to csv
-write.csv(samples, "data/genetic_diversity.csv", row.names = FALSE)
+write.csv(samples, "../data/genetic_diversity.csv", row.names = FALSE)
 
 # Rest of your code...
 
@@ -44,7 +44,6 @@ ggplot(samples, aes(x = site, y = sr)) +
 
 # save the plot
 
-ggsave("data/sr_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 # change x tick angle
 
 ggplot(samples, aes(x = site, y = shannon)) +
@@ -57,10 +56,6 @@ ggplot(samples, aes(x = site, y = shannon)) +
     theme(axis.ticks = element_line(size = 1)) +
     theme(panel.grid.major = element_blank()) +
     theme(panel.grid.minor = element_blank())
-
-# save the plot
-
-ggsave("data/shannon_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 
 
 sp <- data.frame(species)
@@ -82,10 +77,6 @@ ggplot(sp2, aes(x = factor(x), y = log(y), fill = x)) +
     xlab("Species") +
     ylab("Total Abundance (log(y))")
 
-# save the plot
-ggsave("data/total_abundance.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
-
-
 # close plot
 dev.off()
 ###
@@ -96,10 +87,6 @@ mds <- metaMDS(species, distance = "bray")
 mds_plot <- plot(mds, type = "text", display = "sites")
 
 mds_plot <- ordihull(mds, type = "text", groups = samples$site, draw = "polygon", col = 2:3)
-
-
-# save the plot
-ggsave("data/mds_plot.png", plot = mds_plot, width = 10, height = 10, dpi = 300)
 
 print(species, samples$site)
 
