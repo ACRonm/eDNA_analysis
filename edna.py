@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px
 
 
 def plot_correlation(corr, data_type):
@@ -41,6 +42,7 @@ def edna(data, data_type):
     else:
         print('No data provided. Using default data...')
         plot_genetic_data(genetic_data, data=None, data_type='eDNA')
+        plot_species_abundance()
 
     # Plotting the heatmap
     return
@@ -106,7 +108,30 @@ def plot_genetic_data(genetic_data, data, data_type):
         plt.xticks(rotation=45)  # Rotate x-axis ticks by 90 degrees
         plt.savefig('./plots/eDNA/genetic_diversity.png')
 
-        plt.show()
+    return
+
+
+def plot_species_abundance():
+
+    df = pd.read_csv('data/species_matrix_transposed.csv')
+
+    df.drop(columns=['Site code'], inplace=True)
+
+    df = pd.DataFrame(dict
+                      (species=df.columns,
+                       abundance=df.sum(axis=0)))
+
+    fig = px.line_polar(df, r='abundance', theta='species', line_close=True)
+
+    fig.update_traces(fill='toself')
+
+    fig.update_layout(polar=dict(radialaxis=dict(type='log')))
+
+    # save the plot
+    fig.write_image('plots/eDNA/species_abundance.png', width=1200, height=800)
+
+    fig.show()
+
     return
 
 

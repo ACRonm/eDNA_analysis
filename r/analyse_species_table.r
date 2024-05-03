@@ -1,32 +1,37 @@
 library(vegan)
 library(ggplot2)
 library(tidyverse)
+library(dplyr)
+library(ggplot2)
 
 
 # load the species tables from a full run
-species <- read.csv("../data/species_matrix_transposed.csv", row.names = 1)
+species <- read.csv("/data/species_matrix_transposed.csv", row.names = 1)
 
 # we want to have samples in the rows and species in the columns
 # species <- t(species)  # Comment out this line
 
-samples <- read.csv("../data/sample_meta.csv", stringsAsFactors = TRUE)
-
-print(samples)
-
-samples$site <- samples$sample_id
+samples <- read.csv("data/sample_meta.csv", stringsAsFactors = TRUE)
 
 print(species)
 
+print(samples)
+
 samples$sr <- specnumber(species)
-
-# save sr to csv
-write.csv(samples, "../data/species_richness.csv", row.names = FALSE)
-
 samples$shannon <- diversity(species, index = "shannon")
-# save shannon to csv
-write.csv(samples, "../data/genetic_diversity.csv", row.names = FALSE)
 
-# Rest of your code...
+# plot the abundance of species in each sample from species table
+sp2 <- data.frame(x = colnames(species), y = colSums(species))
+ggplot(sp2, aes(x = factor(x), y = log(y), fill = x)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Species") +
+    ylab("Total Abundance (log(y))")
+
+# save the plot
+ggsave("data/total_abundance.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
+
+
 
 
 # check some relationships
@@ -44,6 +49,7 @@ ggplot(samples, aes(x = site, y = sr)) +
 
 # save the plot
 
+ggsave("data/sr_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 # change x tick angle
 
 ggplot(samples, aes(x = site, y = shannon)) +
@@ -56,6 +62,10 @@ ggplot(samples, aes(x = site, y = shannon)) +
     theme(axis.ticks = element_line(size = 1)) +
     theme(panel.grid.major = element_blank()) +
     theme(panel.grid.minor = element_blank())
+
+# save the plot
+
+ggsave("data/shannon_boxplot.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
 
 
 sp <- data.frame(species)
@@ -77,6 +87,10 @@ ggplot(sp2, aes(x = factor(x), y = log(y), fill = x)) +
     xlab("Species") +
     ylab("Total Abundance (log(y))")
 
+# save the plot
+ggsave("data/total_abundance.png", plot = last_plot(), width = 10, height = 10, dpi = 300)
+
+
 # close plot
 dev.off()
 ###
@@ -84,9 +98,17 @@ dev.off()
 
 mds <- metaMDS(species, distance = "bray")
 
-mds_plot <- plot(mds, type = "text", display = "sites")
+# Create a PNG file
+png("data/mds_plot.png", width = 10, height = 10, units = "in", res = 300)
 
-mds_plot <- ordihull(mds, type = "text", groups = samples$site, draw = "polygon", col = 2:3)
+# Plot the NMDS results
+plot(mds, type = "text", display = "sites")
+
+# Draw the hulls
+ordihull(mds, groups = samples$site, draw = "polygon", col = 2:3)
+
+# Close the PNG device
+dev.off()
 
 print(species, samples$site)
 
