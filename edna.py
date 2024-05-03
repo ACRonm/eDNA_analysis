@@ -4,6 +4,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+def plot_correlation(corr, data_type):
+    # plot the correlation matrix
+    annotation = False
+
+    if len(corr.columns) < 10:
+        annotation = True
+
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(corr, annot=annotation, cmap='coolwarm')
+    plt.title('Correlation Matrix')
+    plt.xticks(rotation=90)  # Rotate x-axis ticks by 45 degrees
+    plt.tight_layout()  # Adjust the layout to prevent tick labels from being cut off
+    plt.savefig(f'plots/eDNA/correlation_matrix_{data_type}.png')
+
+    return
+
+
 def edna(data, data_type):
 
     genetic_data = pd.read_csv('data/raw_data.csv')
@@ -48,13 +65,19 @@ def plot_genetic_data(genetic_data, data, data_type):
         merged_data.drop(columns=['Site code'], inplace=True)
 
         # plot genetic diversity vs all other columns 4 at a time
-
-        for i in range(0, len(merged_data.columns), 4):
+        if len(merged_data.columns) > 10:
+            # pairplot merged data
             sns.pairplot(data=merged_data,
-                         x_vars=merged_data.columns[i:i + 4],
+                         x_vars=merged_data.columns[0:4],
                          y_vars=['Genetic Diversity (shannon)'])
-            # save the plot
-            plt.savefig(f'plots/eDNA/genetic_diversity_vs_{data_type}_{i}.png')
+        else:
+            for i in range(0, len(merged_data.columns), 4):
+                sns.pairplot(data=merged_data,
+                             x_vars=merged_data.columns[i:i + 4],
+                             y_vars=['Genetic Diversity (shannon)'])
+                # save the plot
+                plt.savefig(
+                    f'plots/eDNA/genetic_diversity_vs_{data_type}_{i}.png')
 
         # get the correlation between genetic diversity and all other columns
         corr = merged_data.corr()
@@ -70,9 +93,10 @@ def plot_genetic_data(genetic_data, data, data_type):
         # save the correlation to a csv file
         genetic_correlation.to_csv(f'data/genetic_correlation_{data_type}.csv')
 
+        plot_correlation(corr, data_type)
+
         print("Plotting the scatter matrix...")
     else:
-
         plt.figure(figsize=(10, 6))
         plt.bar(genetic_data['Site code'],
                 genetic_data['Genetic Diversity (shannon)'])
@@ -80,10 +104,9 @@ def plot_genetic_data(genetic_data, data, data_type):
         plt.ylabel('Genetic Diversity (Shannon)')
         plt.title('Genetic Diversity by Site')
         plt.xticks(rotation=45)  # Rotate x-axis ticks by 90 degrees
-        plt.savefig('plots/eDNA/genetic_diversity.png')
+        plt.savefig('./plots/eDNA/genetic_diversity.png')
 
         plt.show()
-        # save plots/eDNA/genetic_diversity.png
     return
 
 

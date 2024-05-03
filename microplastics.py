@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from edna import edna
 
 
 def plot_microplastics(data):
@@ -19,6 +20,8 @@ def plot_microplastics(data):
     plt.ylabel('Number of microplastics')
     plt.xticks(rotation=45)
 
+    plt.tight_layout()  # Add this line to adjust the layout
+
     plt.savefig('./plots/Microplastics/absolute_microplastics.png')
     plt.close()
 
@@ -31,6 +34,8 @@ def plot_microplastics(data):
     plt.ylabel('Microplastics per litre')
     plt.xticks(rotation=45)
     # save the plot
+    plt.tight_layout()  # Add this line to adjust the layout
+
     plt.savefig('./plots/Microplastics/relative_microplastics.png')
     plt.close()
 
@@ -42,15 +47,31 @@ def microplastics(data):
     data = data[['Site code', 'Number of microplastics',
                  'Microplastics per litre']]
 
-    # average the values
-    data = data.groupby('Site code').mean()
+    while True:
+        choice = input("Would you like to average both streams' data? y/n.")
+        try:
+            if choice == 'y':
+                print("Averaging both streams' data...")
 
+                # average the values
+                data = data.groupby('Site code').mean()
+            else:
+
+                # if there are more than one row with the same site code, change the second site code to be unique
+                data.loc[:, 'Site code'] = data['Site code'].apply(
+                    lambda x: x + '.S2' if data['Site code'].duplicated().any() else x)
+        except Exception as e:
+            print(e)
+            print("Invalid choice. Please try again.")
+            continue
+
+        break
     while True:
         choice = menu()
         if choice == 1:
             plot_microplastics(data)
         elif choice == 2:
-            continue
+            edna(data, data_type='microplastics')
         elif choice == 3:
             break
 

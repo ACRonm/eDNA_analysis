@@ -1,6 +1,4 @@
 import pandas as pd
-import seaborn as sns
-import sys
 from edna import edna
 
 
@@ -8,11 +6,8 @@ def heavy_metals(data):
 
     print('Evaluating heavy metals data')
 
-    # drop first row
-    data = data.drop(0)
-
     # heavy metals are from cols 22 to 65
-    heavy_metals = data.iloc[:, 22:65]
+    heavy_metals = data.iloc[:, 21:65]
     site_code = data['Site code']
 
     # add site code first col

@@ -1,6 +1,6 @@
 R-4.3.3-win.exe
 /data/ETT*
 
-.png
+*.png
 
 __pycache__/
