@@ -10,6 +10,8 @@ def heavy_metals(data):
     heavy_metals = data.iloc[:, 21:65]
     site_code = data['Site code']
 
+    print(heavy_metals.describe())
+
     # add site code first col
     heavy_metals.insert(0, 'Site code', site_code)
 

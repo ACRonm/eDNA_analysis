@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
 
 
 def plot_correlation(corr, data_type):
@@ -29,20 +31,25 @@ def edna(data, data_type):
 
     genetic_data = genetic_data[['Site code', 'Genetic Diversity (shannon)']]
 
-    # drop rows with missing values
-    genetic_data = genetic_data.dropna()
-    # get all with unique site codes
-    genetic_data = genetic_data.drop_duplicates(subset='Site code')
+    # average duplicate site codes
+    genetic_data = genetic_data.groupby('Site code').mean().reset_index()
+
+    # drop ETT24.12
+    genetic_data = genetic_data[genetic_data['Site code'] != 'ETT24.12']
 
     if data is not None:
         print('Data provided. Using provided data...')
         # read data
         plot_genetic_data(genetic_data, data, data_type)
 
+        if "metal" in data_type:
+            plot_metal_relationship(genetic_data, data, data_type)
+
     else:
         print('No data provided. Using default data...')
         plot_genetic_data(genetic_data, data=None, data_type='eDNA')
         plot_species_abundance()
+        plot_stacked_bar_abundance()
 
     # Plotting the heatmap
     return
@@ -52,10 +59,6 @@ def plot_genetic_data(genetic_data, data, data_type):
     if data is not None:
         # plot the genetic data vs the provided data in a scatter matrix
         print('Plotting genetic data vs provided data...')
-
-        print(genetic_data.head())
-
-        print(data.head())
 
         # impute missing values
         print("Imputing missing data...")
@@ -89,24 +92,15 @@ def plot_genetic_data(genetic_data, data, data_type):
 
         print("Correlation between genetic diversity and all other columns:")
 
-        print(genetic_correlation)
-
         print("Saving the correlation to a csv file...")
+
+        # sort by correlation
+        genetic_correlation = genetic_correlation.sort_values(ascending=False)
+
         # save the correlation to a csv file
         genetic_correlation.to_csv(f'data/genetic_correlation_{data_type}.csv')
 
         plot_correlation(corr, data_type)
-
-        print("Plotting the scatter matrix...")
-    else:
-        plt.figure(figsize=(10, 6))
-        plt.bar(genetic_data['Site code'],
-                genetic_data['Genetic Diversity (shannon)'])
-        plt.xlabel('Site Code')
-        plt.ylabel('Genetic Diversity (Shannon)')
-        plt.title('Genetic Diversity by Site')
-        plt.xticks(rotation=45)  # Rotate x-axis ticks by 90 degrees
-        plt.savefig('./plots/eDNA/genetic_diversity.png')
 
     return
 
@@ -130,7 +124,77 @@ def plot_species_abundance():
     # save the plot
     fig.write_image('plots/eDNA/species_abundance.png', width=1200, height=800)
 
-    fig.show()
+    return
+
+
+def plot_stacked_bar_abundance():
+    df = pd.read_csv('data/species_matrix_transposed.csv')
+
+    # print the site code col
+    print(df['Site code'])
+
+    # for each value in the site code column, replace "Site_" with "ETT24."
+    df['Site code'] = df['Site code'].replace("Site_", "ETT24.", regex=True)
+
+    # plot the stacked bar chart with the species abundance on the y-axis and the site code on the x-axis
+    df.set_index('Site code', inplace=True)
+
+    ax = df.plot(kind='bar', stacked=True, figsize=(
+        10, 6), colormap='tab20b', edgecolor='black')
+    plt.title('Species abundance by site code')
+    plt.xlabel('Species')
+    plt.ylabel('Abundance')
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Add bbox_inches='tight' to include legend
+    plt.savefig('plots/eDNA/stacked_bar_abundance.png', bbox_inches='tight')
+
+    return
+
+
+def plot_metal_relationship(genetic_data, data, data_type):
+
+    # close all plots
+    plt.close('all')
+
+    # plot the relationship between the genetic diversity and the metal concentrations
+    # merge the genetic data with the metal data
+    data = data.filter(regex='Pb|As|Ca|Zn|Ni|Cu|Li|U')
+    merged_data = pd.merge(genetic_data, data, on='Site code')
+
+    # drop na
+    merged_data.dropna(inplace=True)
+
+    # drop the site code column
+    merged_data.drop(columns=['Site code'], inplace=True)
+
+    # perform two-way anova between genetic diversity and metal concentrations
+    print("Performing two-way ANOVA between genetic diversity and metal concentrations...")
+    # create a formula
+    # Assuming merged_data is your DataFrame and has been correctly prepared
+
+    # Create a formula by wrapping column names with spaces in Q("")
+    formula = 'Q("Genetic Diversity (shannon)") ~ ' + \
+        ' + '.join([f'Q("{col}")' for col in merged_data.columns[1:]])
+
+    print(formula)
+
+    # perform the two-way anova
+    model = ols(formula, data=merged_data).fit()
+    anova_table = sm.stats.anova_lm(model, typ=2)
+    print(anova_table)
+
+    # save the anova table to a csv file
+    anova_table.to_csv(f'data/anova_table_{data_type}.csv')
+
+    # plot linear regression between genetic diversity and metal concentrations
+    for i in range(1, len(merged_data.columns)):
+        sns.lmplot(x=merged_data.columns[i], y='Genetic Diversity (shannon)',
+                   data=merged_data, height=6, aspect=1.5, line_kws={'color': 'red'}, ci=None)
+
+        plt.savefig(
+            f'plots/eDNA/genetic_diversity_vs_{data_type}_{i}.png')
 
     return
 
