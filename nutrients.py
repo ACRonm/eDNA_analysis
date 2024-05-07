@@ -1,5 +1,6 @@
 import pandas as pd
 from edna import edna
+from edna import plot_nutrients
 
 
 def nutrients(data):
@@ -14,9 +15,6 @@ def nutrients(data):
     # replace "BDL with imputed value"
     nutrients = nutrients.replace('BDL', 0)
 
-    # print the datatypes
-    print(nutrients.dtypes)
-
     # add site code first col
     nutrients.insert(0, 'Site code', site_code)
 
@@ -25,8 +23,11 @@ def nutrients(data):
     # average the values from the water and soil concentrations that contain the same site code
     nutrients = nutrients.groupby('Site code').mean()
 
-    print("Analysing correlation between water nutrient concentration and eDNA")
-    edna(nutrients, "nutrients_concentrations")
+    genetic_data = pd.read_csv('data/raw_data.csv')
+
+    genetic_data = genetic_data[['Site code', 'Genetic Diversity (shannon)']]
+
+    plot_nutrients(genetic_data, nutrients, "nutrient_concentrations")
 
     return
 
