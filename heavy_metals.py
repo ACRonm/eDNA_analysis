@@ -46,19 +46,24 @@ def plot_heavy_metal_concentrations(metal_data, datatype):
     # close any existing plots
     plt.close()
 
-    # normalise values against site 1
-    metal_data = metal_data.div(metal_data.iloc[0])
+    # remove any rows with NaN values
+    metal_data.dropna(inplace=True)
 
-    # plot the heavy metal concentrations at each site
-    plt.figure()
-    plt.plot(metal_data.T)
-    plt.xlabel('Site')
-    plt.ylabel('Concentration')
-    plt.title('Heavy metal concentrations in ' + datatype)
-    plt.legend(metal_data.columns)
-    plt.savefig('plots/Heavy_metals' + datatype + '.png')
-    plt.show()
+    # filter mg, as, cu, ni, pb, zn with regex
+    metal_data = metal_data.filter(regex='(Ca)')
 
+    print(metal_data.head())
+
+    # bar chart
+    metal_data.plot(kind='bar', figsize=(20, 10))
+
+    plt.xlabel('Site code')
+    plt.ylabel('Concentration (mg/kg)')
+    plt.title('Heavy metal concentrations')
+    plt.tight_layout()
+
+    # save the plot
+    plt.savefig('./plots/Heavy_metals/' + datatype + '.png')
     return
 
 
